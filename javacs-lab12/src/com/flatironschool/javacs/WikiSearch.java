@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -60,8 +61,25 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch or(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+
+    // initialize union map with map containing individual results
+		Map<String, Integer> union = new HashMap<String, Integer>(map);
+
+    for(String url : that.map.keySet()) {
+
+      // relevance of each result
+      int thisResult = this.getRelevance(url);
+      int thatResult = that.getRelevance(url);
+
+      // sum of relevances
+      int relevance = totalRelevance(thisResult, thatResult);
+
+      // add mapping to union results
+      union.put(url, relevance);
+    }
+
+    WikiSearch unionSearch = new WikiSearch(union);
+    return unionSearch;
 	}
 	
 	/**
@@ -71,20 +89,42 @@ public class WikiSearch {
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch and(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
+    // initialize empty intersection map
+		Map<String, Integer> intersection = new HashMap<String, Integer>();
+
+    for(String url : this.map.keySet()) {
+
+      // determine whether there is an intersection
+      boolean intersected = that.map.containsKey(url);
+
+      if(intersected) {
+        int thisResult = this.getRelevance(url);
+        int thatResult = that.getRelevance(url);
+        int relevance = totalRelevance(thisResult, thatResult);
+        intersection.put(url, relevance);
+      }
+      
+    }
+    WikiSearch intersectionSearch = new WikiSearch(intersection);
+    return intersectionSearch;
 	}
 	
 	/**
-	 * Computes the intersection of two search results.
+	 * Computes the difference of two search results.
 	 * 
 	 * @param that
 	 * @return New WikiSearch object.
 	 */
 	public WikiSearch minus(WikiSearch that) {
-        // FILL THIS IN!
-		return null;
-	}
+	  Map<String, Integer> difference = new HashMap<String, Integer>(map);
+
+    for(String url : that.map.keySet()) {
+      difference.remove(url);  
+    }
+    WikiSearch differenceSearch = new WikiSearch(difference);
+    return differenceSearch;
+
+  }
 	
 	/**
 	 * Computes the relevance of a search with multiple terms.
@@ -104,8 +144,29 @@ public class WikiSearch {
 	 * @return List of entries with URL and relevance.
 	 */
 	public List<Entry<String, Integer>> sort() {
-        // FILL THIS IN!
-		return null;
+    // list of entries with URL and relevance
+    List<Entry<String, Integer>> entries = new ArrayList<Entry<String, Integer>>(map.entrySet());
+
+    Comparator<Entry<String, Integer>> comparator = new Comparator<Entry<String, Integer>>() {
+      @Override
+      public int compare(Entry<String, Integer> entry1, Entry<String, Integer> entry2) {
+        int entry1Val = entry1.getValue();
+        int entry2Val = entry2.getValue();
+
+        if(entry1Val > entry2Val) {
+          return 1;
+        }
+        else if(entry1Val < entry2Val) {
+          return -1;
+        }
+        else {
+          return 0;
+        }
+      }
+    };
+    
+    Collections.sort(entries, comparator);
+    return entries;
 	}
 
 	/**
